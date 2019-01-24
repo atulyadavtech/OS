@@ -1,5 +1,13 @@
 ## 7.6 
 #Disable the selinux
+
 #Disable the firewalld/IPtables
+
 #Enable the EPEL
 #Download the Packages
+
+export HISTSIZE=10000
+export HISTCONTROL=erasedups
+export HISTTIMEFORMAT='%F %T	'
+shopt -s histappend
+PROMPT_COMMAND="history -a;$PROMPT_COMMAND"
