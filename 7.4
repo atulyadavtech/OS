@@ -1,0 +1,18 @@
+Linux server1.local 3.10.0-693.17.1.el7.x86_64 #1 SMP Sun Jan 14 10:36:03 EST 2018 x86_64 x86_64 x86_64 GNU/Linux
+
+echo "master.local" > /etc/hostname
+hostnamectl status
+hostname -A;hostname -d;hostname -f;hostname -i;hostname -I
+
+mkdir -p /opt/Redhat7Update4/media
+mkdir -p /var/spool/pbs/server_priv/
+mkdir -p /opt/locuz/ganana/vol/webapp/gcm-content/repo/pbs/
+mkdir -p /opt/apps
+mkdir -p /etc/pdsh
+mkdir -p /opt/softback
+mkdir -p /export/
+mkdir -p /export/home/{module,shared}
+
+
+
+cat >/etc/yum.repos.d/Redhat-Media.repo<< EOF
