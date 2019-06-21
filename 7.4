@@ -1,6 +1,6 @@
 Linux server1.local 3.10.0-693.17.1.el7.x86_64 #1 SMP Sun Jan 14 10:36:03 EST 2018 x86_64 x86_64 x86_64 GNU/Linux
 
-echo "master.local" > /etc/hostname
+echo "master1.local" > /etc/hostname
 hostnamectl status
 hostname -A;hostname -d;hostname -f;hostname -i;hostname -I
 
@@ -26,7 +26,6 @@ cat >/etc/yum.repos.d/Redhat-Media.repo<< EOF
 sed -i -e 's/quiet/quiet net.ifnames=0 biosdevname=0/' /etc/default/grub
 grub2-mkconfig -o /boot/grub2/grub.cfg
 
-
 cp /boot/initramfs-$(uname -r).img /boot/initramfs-$(uname -r).img.$(date +%m-%d-%H%M%S).bak
 dracut -f -v
 
@@ -35,7 +34,6 @@ echo "master1.local" > /etc/hostname
 >/etc/exports
 echo "/home   *(rw,no_root_squash,no_subtree_check) " >> /etc/exports
 
-
 yum clean all
 yum erase rdma -y
 yum group install "Development Tools" "Compatibility Libraries" -y
@@ -43,12 +41,10 @@ yum group install "Development Tools" "Compatibility Libraries" -y
 systemctl mask firewalld;systemctl stop firewalld;yum -y install iptables-services;systemctl enable iptables;systemctl start iptables
 iptables --list;iptables --flush;iptables --delete-chain;service iptables save
 
-
 systemctl enable rpcbind
 systemctl enable nfs-lock
 systemctl enable nfs-server
 systemctl enable nfs-idmap
-
 
 ##disable unwanted service
 systemctl disable cups bluetooth firewalld NetworkManager
