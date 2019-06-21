@@ -44,7 +44,7 @@ export MODULEPATH=/home/module
 
 >/etc/profile.d/pdsh.sh
 echo "export PDSH_RCMD_TYPE='ssh' " >> /etc/profile.d/pdsh.sh
-echo "export WCOLL='/etc/pdsh/machines' " >> /etc/profile.d/pdsh.sh
+echo "export WCOLL='/home/config/pdsh-machine' " >> /etc/profile.d/pdsh.sh
 
 >/etc/exports
 echo "/home   *(rw,no_root_squash,no_subtree_check) " >> /etc/exports
