@@ -7,12 +7,52 @@ hostname -A;hostname -d;hostname -f;hostname -i;hostname -I
 mkdir -p /opt/Redhat7Update4/media
 mkdir -p /var/spool/pbs/server_priv/
 mkdir -p /opt/locuz/ganana/vol/webapp/gcm-content/repo/pbs/
-mkdir -p /opt/apps
 mkdir -p /etc/pdsh
 mkdir -p /opt/softback
-mkdir -p /export/
-mkdir -p /export/home/{module,shared}
-
-
+mkdir -p /home/{apps,module,shared}
 
 cat >/etc/yum.repos.d/Redhat-Media.repo<< EOF
+[Redhat-media]
+name=Redhat-$releasever - Media
+baseurl=file:///opt/Redhat7Update4/media
+gpgcheck=0
+enabled=1
+EOF
+
+##Selinux Disabled
+sed -i 's/=enforcing/=disabled/' /etc/selinux/config
+
+cat >/etc/yum.repos.d/Redhat-Media.repo<< EOF
+sed -i -e 's/quiet/quiet net.ifnames=0 biosdevname=0/' /etc/default/grub
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+
+cp /boot/initramfs-$(uname -r).img /boot/initramfs-$(uname -r).img.$(date +%m-%d-%H%M%S).bak
+dracut -f -v
+
+echo "master1.local" > /etc/hostname
+
+>/etc/exports
+echo "/home   *(rw,no_root_squash,no_subtree_check) " >> /etc/exports
+
+
+yum clean all
+yum erase rdma -y
+yum group install "Development Tools" "Compatibility Libraries" -y
+
+systemctl mask firewalld;systemctl stop firewalld;yum -y install iptables-services;systemctl enable iptables;systemctl start iptables
+iptables --list;iptables --flush;iptables --delete-chain;service iptables save
+
+
+systemctl enable rpcbind
+systemctl enable nfs-lock
+systemctl enable nfs-server
+systemctl enable nfs-idmap
+
+
+##disable unwanted service
+systemctl disable cups bluetooth firewalld NetworkManager
+
+## Disable Virtual Interface 
+virsh net-undefine default;chkconfig libvirtd off;systemctl disable libvirtd.service
+
