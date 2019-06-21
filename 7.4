@@ -1,5 +1,11 @@
 Linux server1.local 3.10.0-693.17.1.el7.x86_64 #1 SMP Sun Jan 14 10:36:03 EST 2018 x86_64 x86_64 x86_64 GNU/Linux
 
+##Run level Change OPtional 
+systemctl get-default
+systemctl set-default multi-user.target
+systemctl get-default
+##graphical.target
+
 echo "master1.local" > /etc/hostname
 hostnamectl status
 hostname -A;hostname -d;hostname -f;hostname -i;hostname -I
@@ -23,13 +29,22 @@ EOF
 sed -i 's/=enforcing/=disabled/' /etc/selinux/config
 
 cat >/etc/yum.repos.d/Redhat-Media.repo<< EOF
+chmod +x /etc/rc.d/rc.local
+
+##Kernel OPtion
 sed -i -e 's/quiet/quiet net.ifnames=0 biosdevname=0/' /etc/default/grub
 grub2-mkconfig -o /boot/grub2/grub.cfg
-
+##Rebuild
 cp /boot/initramfs-$(uname -r).img /boot/initramfs-$(uname -r).img.$(date +%m-%d-%H%M%S).bak
 dracut -f -v
 
 echo "master1.local" > /etc/hostname
+>/etc/profile.d/master.sh
+export MODULEPATH=/home/module
+
+>/etc/profile.d/pdsh.sh
+echo "export PDSH_RCMD_TYPE='ssh' " >> /etc/profile.d/pdsh.sh
+echo "export WCOLL='/etc/pdsh/machines' " >> /etc/profile.d/pdsh.sh
 
 >/etc/exports
 echo "/home   *(rw,no_root_squash,no_subtree_check) " >> /etc/exports
@@ -37,18 +52,45 @@ echo "/home   *(rw,no_root_squash,no_subtree_check) " >> /etc/exports
 yum clean all
 yum erase rdma -y
 yum group install "Development Tools" "Compatibility Libraries" -y
-
+yum install ypserv ypbind rpcbind nfs-utils -y
 systemctl mask firewalld;systemctl stop firewalld;yum -y install iptables-services;systemctl enable iptables;systemctl start iptables
 iptables --list;iptables --flush;iptables --delete-chain;service iptables save
 
-systemctl enable rpcbind
-systemctl enable nfs-lock
-systemctl enable nfs-server
-systemctl enable nfs-idmap
+
+##Enable Service
+systemctl enable nfs-server rpcbind nfs-lock nfs-idmap
 
 ##disable unwanted service
 systemctl disable cups bluetooth firewalld NetworkManager
 
 ## Disable Virtual Interface 
 virsh net-undefine default;chkconfig libvirtd off;systemctl disable libvirtd.service
+
+
+## Time Setup
+timedatectl
+timedatectl set-ntp yes
+ntpdate ntp.ucsd.edu
+hwclock --systohc
+
+###Compute Node Post Installation 
+mkdir /opt/apps
+cat >/etc/yum.repos.d/locuz.repo<< EOF
+[mlnx]
+name=mlnx
+baseurl=http://puppet/gcm-content/repo/MLNX_OFED_LINUX-4.1-1.0.2.0-rhel7.3-x86_64/RPMS/
+enabled=1
+gpgcheck=0
+
+[pbs]
+name=pbs
+baseurl=http://puppet/gcm-content/repo/pbs/
+enabled=1
+gpgcheck=0
+EOF
+
+yum groupinstall "MLNX_OFED HPC" "Development Tools" "Compatibility Libraries" -y
+yum install pbspro-execution environment-modules vim -y
+systemctl enable pbs
+systemctl enable openibd
 
